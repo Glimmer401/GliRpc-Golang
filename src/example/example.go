@@ -1,13 +1,15 @@
 package example
 
-// example RPC args and Reture value type
+// example RPC args ,Reture value type, and a simple handler
 type ExamArgs struct {
 	x int
 	y int
 }
-type ExamReture struct  {
+
+type ExamRets struct  {
 	z int
 }
 
-// example target remote procedure call
-func handler(int x, int y) int {  return x+y  }
+func handler(args *ExamArgs, rets *ExamRets) {
+	rets.z = args.x + args.y
+}
