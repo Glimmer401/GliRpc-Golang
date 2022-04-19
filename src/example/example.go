@@ -2,14 +2,14 @@ package example
 
 // example RPC args ,Reture value type, and a simple handler
 type ExamArgs struct {
-	x int
-	y int
+	X int	`json:"X`
+	Y int	`json:"Y`
 }
 
 type ExamRets struct  {
-	z int
+	Z int	`json:"Z`
 }
 
-func handler(args *ExamArgs, rets *ExamRets) {
-	rets.z = args.x + args.y
+func Handler(args *ExamArgs, rets *ExamRets) {
+	rets.Z = args.X + args.Y
 }
