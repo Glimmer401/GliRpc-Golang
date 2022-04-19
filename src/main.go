@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"erpc/server"
-	"erpc/codec"
+	"erpc/client"
+	"fmt"
 	"log"
 	"net"
 	"time"
+	"sync"
 )
 
 func startServer(addr chan string) {
@@ -24,27 +24,28 @@ func startServer(addr chan string) {
 }
 
 func main() {
+	// start a server
 	// get addr back by channel
 	addr := make(chan string)
 	go startServer(addr)
+	client, _ := client.Dial("tcp", <-addr)
+	defer func() { _ = client.Close() }()
 
-	// behaviour similar to clients
-	conn, _ := net.Dial("tcp", <-addr)
-	defer func() { _ = conn.Close() }()
 	time.Sleep(time.Second)
-	// send 1 options with 5 request
-	_ = json.NewEncoder(conn).Encode(server.DefaultOption)
-	cc := codec.NewGobCodec(conn)
-	// send request & receive response
+
+	// start a client sending 5 request
+	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
-		h := &codec.Header{
-			MethodName: "Gli.Add",
-			Seq:         uint64(i),
-		}
-		_ = cc.Write(h, fmt.Sprintf("erpc req %d", h.Seq))
-		_ = cc.ReadHeader(h)
-		var reply string
-		_ = cc.ReadBody(&reply)
-		log.Println("reply:", reply)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			args := fmt.Sprintf("erpc req %d", i)
+			var reply string
+			if err := client.Call("Gli.Add", args, &reply); err != nil {
+				log.Fatal("call Gli.Add error:", err)
+			}
+			log.Println("reply:", reply)
+		}(i)
 	}
+	wg.Wait()
 }
