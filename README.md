@@ -5,9 +5,7 @@
 
 # GliRPC
 
-However, since esphe started implement RPC protocol, got a bunch of support from Glimmer studio.
 
-And after small preperation, Glimmer Studio begun implement RPC with different language, now mainly on go and java.
 
 # Milestone
 
