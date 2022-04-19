@@ -1,7 +1,3 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package server
 
 import (
@@ -16,25 +12,11 @@ import (
 	"sync"
 )
 
-
-const Magic = 0x0817ff
-type Option struct {
-	Magic		int        // Magic marks this's a erpc request
-	CodecType   codec.Type // different Codec to encode body
-}
-
-var DefaultOption = &Option{
-	Magic: 		Magic,
-	CodecType:  codec.GobType,
-}
-
-
 type Server struct{}
 
 func NewServer() *Server {
 	return &Server{}
 }
-
 
 func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 	defer func() { _ = conn.Close() }()
@@ -56,12 +38,9 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 	server.serveCodec(f(conn))
 }
 
-// invalidRequest is a placeholder for response argv when error occurs
-var invalidRequest = struct{}{}
-
 func (server *Server) serveCodec(cc codec.Codec) {
-	sending := new(sync.Mutex) // make sure to send a complete response
-	wg := new(sync.WaitGroup)  // wait until all request are handled
+	sending := new(sync.Mutex)
+	wg := new(sync.WaitGroup)
 	for {
 		req, err := server.readRequest(cc)
 		if err != nil {
@@ -77,12 +56,6 @@ func (server *Server) serveCodec(cc codec.Codec) {
 	}
 	wg.Wait()
 	_ = cc.Close()
-}
-
-// request stores all information of a call
-type request struct {
-	h            *codec.Header // header of request
-	argv, replyv reflect.Value // argv and replyv of request
 }
 
 func (server *Server) readRequestHeader(cc codec.Codec) (*codec.Header, error) {
@@ -102,8 +75,7 @@ func (server *Server) readRequest(cc codec.Codec) (*request, error) {
 		return nil, err
 	}
 	req := &request{h: h}
-	// TODO: now we don't know the type of request argv
-	// day 1, just suppose it's string
+	// TODO: now we don't know the type of request argv, make it string whatever
 	req.argv = reflect.New(reflect.TypeOf(""))
 	if err = cc.ReadBody(req.argv.Interface()); err != nil {
 		log.Println("rpc server: read argv err:", err)
@@ -112,6 +84,7 @@ func (server *Server) readRequest(cc codec.Codec) (*request, error) {
 }
 
 func (server *Server) sendResponse(cc codec.Codec, h *codec.Header, body interface{}, sending *sync.Mutex) {
+	// concurrency management needed
 	sending.Lock()
 	defer sending.Unlock()
 	if err := cc.Write(h, body); err != nil {
@@ -127,7 +100,7 @@ func (server *Server) handleRequest(cc codec.Codec, req *request, sending *sync.
 	server.sendResponse(cc, req.h, req.replyv.Interface(), sending)
 }
 
-// 启动服务仅需传入一个 Listener 即可
+// start a server by handing in a net.listener
 func (server *Server) Accept(lis net.Listener) {
 	for {
 		conn, err := lis.Accept()
@@ -135,7 +108,6 @@ func (server *Server) Accept(lis net.Listener) {
 			log.Println("rpc server: accept error:", err)
 			return
 		}
-		// 启动一个协程负责处理一个连接，减少阻塞
 		go server.ServeConn(conn)
 	}
 }
