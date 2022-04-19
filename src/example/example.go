@@ -10,6 +10,11 @@ type ExamRets struct  {
 	Z int	`json:"Z`
 }
 
-func Handler(args *ExamArgs, rets *ExamRets) {
+type Calc struct {
+
+}
+
+func (c *Calc) Add(args ExamArgs, rets *ExamRets) error{
 	rets.Z = args.X + args.Y
+	return nil
 }

@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 
 // an request for procedure
 type Procedure struct {
-	Name string			// Remote Procedure Func name
-	Handler interface{} // Remote Procedure Handlers
-	Args    reflect.Type// Remote Procedure Args type
-	Rets 	reflect.Type// Remote Procedure Rets type
+	Name 	string			// Remote Procedure Func name
+	Handler interface{} 	// Remote Procedure Handlers
+	Args    reflect.Type	// Remote Procedure Args type
+	Rets 	reflect.Type	// Remote Procedure Rets type
 }
 
 // registered procedures
@@ -48,27 +48,22 @@ func (s *Service) Apply(request util.Request) ([]reflect.Value) {
 	procedure := s.Handlers[s.Name2Index[request.Name]]
 	handler := reflect.ValueOf(procedure.Handler)
 
-	request.Args = request.Args.(map[string]interface{})
-	request.Rets = request.Rets.(map[string]interface{})
-	argsJson, _ := json.Marshal(request.Args)
-	retsJson, _ := json.Marshal(request.Rets)
-	fmt.Println(string(argsJson))
 	args := reflect.New(procedure.Args)
 	rets := reflect.New(procedure.Rets)
-	json.Unmarshal(argsJson, args)
-	json.Unmarshal(retsJson, rets)
 
+	// from request to reflect value
+	request.Args = request.Args.(map[string]interface{})
+	request.Rets = request.Rets.(map[string]interface{})
+	
+
+	// finish unserilization
 	fmt.Println(args)
 	fmt.Println(rets)
-
-	json.Unmarshal(argsJson, &args)
-	json.Unmarshal(retsJson, &rets)
 	
+	// running the methods
 	input := make([]reflect.Value, 2)
 	input[0] = args
 	input[1] = rets
-
-	
 	handler.Call(input)
 	
 	return nil
