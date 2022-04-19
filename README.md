@@ -5,6 +5,7 @@
 
 # GliRPC
 
+<<<<<<< HEAD
 # Implement
 
 ## 序列化
@@ -31,6 +32,9 @@ gob 更为 go 原生一点，但是不支持跨语言的反序列化。
 ```golang
 func (t *T) MethodName(argType T1, replyType *T2) error
 ```
+=======
+
+>>>>>>> Update README.md
 
 # Milestone
 
