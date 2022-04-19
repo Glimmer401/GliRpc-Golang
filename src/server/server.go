@@ -5,9 +5,10 @@
 package server
 
 import (
+	"erpc/codec"
+
 	"encoding/json"
 	"fmt"
-	"erpc/codec"
 	"io"
 	"log"
 	"net"
@@ -15,16 +16,16 @@ import (
 	"sync"
 )
 
-const Magic = 0x114514
 
+const Magic = 0x0817ff
 type Option struct {
-	Magic		int        // MagicNumber marks this's a erpc request
-	CodecType   codec.Type // client may choose different Codec to encode body
+	Magic		int        // Magic marks this's a erpc request
+	CodecType   codec.Type // different Codec to encode body
 }
 
 var DefaultOption = &Option{
-	Magic: Magic,
-	CodecType:   codec.GobType,
+	Magic: 		Magic,
+	CodecType:  codec.GobType,
 }
 
 
