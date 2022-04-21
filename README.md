@@ -26,6 +26,12 @@ gob 更为 go 原生一点，但是不支持跨语言的反序列化。
 - the method’s second argument is a pointer.
 - the method has return type error.
 
+也就是说，对应的方法应该有如下格式
+
+```golang
+func (t *T) MethodName(argType T1, replyType *T2) error
+```
+
 # Milestone
 
 - 2022.4.17 eRPC started
