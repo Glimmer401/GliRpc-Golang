@@ -7,23 +7,23 @@ import (
 	"sync/atomic"
 )
 
-type service struct {
-	name		string
+type Service struct {
+	Name		string
 	receiver	reflect.Value
 	typ			reflect.Type
-	methods		map[string]*methodType
+	Methods		map[string]*MethodType
 }
 
 
 // create a new service from a struct
-func newService (rcvr interface{}) *service {
-	s := new(service)
+func NewService (rcvr interface{}) *Service {
+	s := new(Service)
 	s.receiver = reflect.ValueOf(rcvr)
 	s.typ      = reflect.TypeOf(rcvr)
-	s.name     = reflect.Indirect(s.receiver).Type().Name()
+	s.Name     = reflect.Indirect(s.receiver).Type().Name()
 
-	if !ast.IsExported(s.name) {
-		log.Fatalf("erpc server: %s is not a exported service name", s.name)
+	if !ast.IsExported(s.Name) {
+		log.Fatalf("erpc server: %s is not a exported service name", s.Name)
 	}
 
 	s.registerMethods()
@@ -32,8 +32,8 @@ func newService (rcvr interface{}) *service {
 
 
 // after init a service, register its methods
-func (s *service) registerMethods() {
-	s.method = make(map[string]*methodType)
+func (s *Service) registerMethods() {
+	s.Methods = make(map[string]*MethodType)
 	for i := 0; i < s.typ.NumMethod(); i++ {
 		method := s.typ.Method(i)
 		mType := method.Type
@@ -44,29 +44,29 @@ func (s *service) registerMethods() {
 			continue
 		}
 		argType, replyType := mType.In(1), mType.In(2)
-		if !isExportedOrBuiltinType(argType) || !isExportedOrBuiltinType(replyType) {
+		if !isBuiltinOrIsExported(argType) || !isBuiltinOrIsExported(replyType) {
 			continue
 		}
-		s.method[method.Name] = &methodType{
+		s.Methods[method.Name] = &MethodType{
 			method:    method,
-			ArgType:   argType,
+			ArgsType:   argType,
 			ReplyType: replyType,
 		}
-		log.Printf("erpc server: register %s.%s\n", s.name, method.Name)
+		log.Printf("erpc server: register %s.%s\n", s.Name, method.Name)
 	}
 }
 
 // check a type if it is a builtin or exported type
-func isBuiltinOrIsExported(t reflect.Value) bool {
+func isBuiltinOrIsExported(t reflect.Type) bool {
 	return ast.IsExported(t.Name()) || t.PkgPath() == ""
 }
 
 
 // call a method
-func (s *service) call(m *methodType, argv, replyv reflect.Value) error {
+func (s *Service) Call(m *MethodType, argv, replyv reflect.Value) error {
 	atomic.AddUint64(&m.numCalls, 1)
 	f := m.method.Func
-	returnValues := f.Call([]reflect.Value{s.rcvr, argv, replyv})
+	returnValues := f.Call([]reflect.Value{s.receiver, argv, replyv})
 	if errInter := returnValues[0].Interface(); errInter != nil {
 		return errInter.(error)
 	}

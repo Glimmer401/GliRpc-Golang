@@ -10,11 +10,9 @@ type ExamRets struct  {
 	Z int	`json:"Z`
 }
 
-type Calc struct {
+type Calc struct {}
 
-}
-
-func (c *Calc) Add(args ExamArgs, rets *ExamRets) error{
+func (c Calc) Add(args ExamArgs, rets *ExamRets) error{
 	rets.Z = args.X + args.Y
 	return nil
 }

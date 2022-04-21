@@ -3,7 +3,7 @@ package main
 import (
 	"erpc/server"
 	"erpc/client"
-	"fmt"
+	"erpc/example"
 	"log"
 	"net"
 	"time"
@@ -13,6 +13,13 @@ import (
 func startServer(addr chan string) {
 	server := server.Server{}
 
+	// regist
+	calc := example.Calc{}
+	if err := server.Register(&calc); err != nil {
+		log.Fatal("erpc: failed to regist: ", err)
+	}
+
+	// start listen
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		log.Fatal("can not create tcp listener:", err)
@@ -39,10 +46,10 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			args := fmt.Sprintf("erpc req %d", i)
-			var reply string
-			if err := client.Call("Gli.Add", args, &reply); err != nil {
-				log.Fatal("call Gli.Add error:", err)
+			args := example.ExamArgs{1, 2}
+			reply := example.ExamRets{}
+			if err := client.Call("Calc.Add", args, &reply); err != nil {
+				log.Fatal("call Calc.Add error:", err)
 			}
 			log.Println("reply:", reply)
 		}(i)
