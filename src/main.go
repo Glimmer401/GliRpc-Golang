@@ -35,9 +35,14 @@ func main() {
 	// get addr back by channel
 	addr := make(chan string)
 	go startServer(addr)
-	client, _ := client.Dial("tcp", <-addr)
-	defer func() { _ = client.Close() }()
 
+
+	// default gob codec
+	client, _ := client.Dial("tcp", <-addr)
+	// json codec
+	// client, _ := client.Dial("tcp", <-addr, &server.Option{0x0817ff, "application/json"})
+	
+	defer func() { _ = client.Close() }()
 	time.Sleep(time.Second)
 
 	// start a client sending 5 request
@@ -46,12 +51,12 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			args := example.ExamArgs{1, 2}
+			args := example.ExamArgs{i, i+1}
 			reply := example.ExamRets{}
 			if err := client.Call("Calc.Add", args, &reply); err != nil {
 				log.Fatal("call Calc.Add error:", err)
 			}
-			log.Println("reply:", reply)
+			log.Println("i+i reply:", reply)
 		}(i)
 	}
 	wg.Wait()
